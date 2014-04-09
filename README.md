@@ -1,5 +1,5 @@
 
-# TimeSerious - Serious Timeseries Data Analysis #
+# Serious Timeseries Data Analysis #
 
 I'm building a simple and fast way to manage and analyse your timeseries data using MongoDB, NodeJS, AngularJS and R.
 
