@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" ng-app>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Timeseries Data Management System (Beta)</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/bootstrap.css" />
+    <!-- <link rel="stylesheet" href="css/bootstrap-theme.css" /> -->
+    <script src="js/angular.min.js"></script>
+    <script src="js/controllers.js"></script>
+    <script src="js/jquery-2.1.0.js"></script>
+    <script src="js/highcharts.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <script src="js/validator.js"></script>
+    <script src="js/dygraph-combined.js"></script>
+    <script src="js/moment.min.js"></script>
+    <script src="js/drag.js"></script>
+    <script src="js/graph.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io.connect('http://localhost');
+      socket.on('message', function (data) {
+        console.log(data);
+        if (data == '/models/model001') {
+          dygraph('modelgraph', 'model001');
+          console.log('dygraphing...');
+          var scope = angular.element($("#model")).scope();
+          scope.checkY();
+        }
+        // Talk back to server...
+        //socket.emit('news', { my: 'data' });
+      });
+    </script>
+  </head>
+  <body style="padding: 30px; padding-top: 80px;">
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation" style="padding-left: 30px; padding-right: 30px;">
+      <div class="container-fluid">
+        <div class="navbar-header"><a class="navbar-brand" href="">Timeseries DMS (beta)</a></div>
+        
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#"> <span class="glyphicon glyphicon-stats"></span> Timeseries</a></li>
+            <li class="active"><a href="#">Models</a></li>
+            <li><a href="#">Graphs</a></li>
+            
+            
+          </ul>
+        </div>
+        
+      </div>
+    </nav>
+    
+    <div class="row">
+      <div class="col-md-4">
+        <div class="panel panel-default" ng-controller="list">
+          <div class="panel-heading">
+            <form class="form-inline" role="form">
+              <div class="form-group">
+                <input autofocus="1" type="text" class="form-control input-sm" placeholder="Search" ng-model="filter" ng-change="search()">
+              </div>
+              <div class="form-group pull-right" style="display: none;" id="closeGraph">
+                <div class="btn-group btn-group-sm pull-right">
+                  <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-step-backward"></span></button>
+                  <button type="button" class="btn btn-default" href="#">Y</button>
+                  <button type="button" class="btn btn-default" href="#">M</button>
+                  <button type="button" class="btn btn-default" href="#">W</button>
+                  <button type="button" class="btn btn-default" href="#">D</button>
+                  <button type="button" class="btn btn-default" href="#"><span class="glyphicon glyphicon-step-forward"></span></button>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="panel-body">
+            <div id="graph"   style="height: 200px; display: none;"></div>
+            <div id="dygraph" style="height: 200px; display: none; width: 100%;"></div>
+            <div class="table-responsive">
+              <table class="table table-hover" >
+                <tr ng-repeat="object in list" class="object">
+                  <td>
+                    <button class="btn btn-default btn-sm" draggable="true" href="" id="{{object._id}}" onclick="showDetails('{{object._id}}');" ondragstart="dragstart(event)">{{object._id}}</button>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-8">
+        <div class="panel panel-default" ng-controller="model" id="model">
+          <div class="panel-heading">
+            <h3 class="panel-title" style="display: inline-block; float: left;">Linear Regression Model</h3>
+            <form class="form-inline" role="form">
+              <div class="form-group pull-right">
+                <div class="btn-group btn-group-sm pull-right">
+                  <button type="button" class="btn btn-default"><span class="glyphicon glyphicon-step-backward"></span></button>
+                  <button type="button" class="btn btn-default" href="#">Y</button>
+                  <button type="button" class="btn btn-default" href="#">M</button>
+                  <button type="button" class="btn btn-default" href="#">W</button>
+                  <button type="button" class="btn btn-default" href="#">D</button>
+                  <button type="button" class="btn btn-default" href="#"><span class="glyphicon glyphicon-step-forward"></span></button>
+                </div>
+              </div>
+            </form>
+            <div class="clearfix"></div>
+          </div>
+          
+          <div class="panel-body">
+            <div id="modelgraph" style="height: 200px; width: 100%;">modelgraph</div>
+            <hr>
+            <form class="form-horizontal" role="form">
+              <div class="form-group">
+                <label for="y" class="col-sm-1 control-label">y</label>
+                <div class="col-sm-4">
+                  <div class="input-group">
+                    <input type="text" class="form-control input-sm" ng-model="y" ng-change="checkY()" ng-disabled="hideOkY()" placeholder="Drop new dependent variable...">
+                    <div class="input-group-btn">
+                      <button type="button" class="btn btn-default btn-sm dropdown-toggle" ng-disabled="hideOkY()" data-toggle="dropdown"><span class="caret"></span></button>
+                      <ul class="dropdown-menu pull-right" ng-model="listY">
+                        <li ng-repeat="itemY in listY"><a href="" ng-click="selectY(itemY._id)">{{itemY._id}}</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-sm-6"><p>
+                  <a class="btn btn-sm btn-success" ng-hide="hideOkY()" ng-disabled="OkYDisabled()" ng-click="okY($index)">
+                    <span class="glyphicon glyphicon-plus"></span>
+                  </a>
+                  <a ng-hide="hideRemoveY()" ng-click="removeY($index)" href="" class="btn btn-default btn-sm">
+                    <span class="glyphicon glyphicon-remove"></span>
+                  </a>
+                </p></div>
+              </div>
+              
+              <div ng-model="features">
+                <div class="form-group" ng-repeat="feature in features">
+                  <label for="" class="col-sm-1 control-label">x{{$index + 1}}</label>
+                  <div class="col-sm-4">
+                    <div class="input-group">
+                      <input type=text disabled class="form-control input-sm" id="x{{$index+1}}" value="{{feature._id}}">
+                      <div class="input-group-btn">
+                        <button type="button" disabled class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-1">
+                    <a ng-click="removeFeature($index)" href="" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-remove"></span></a>
+                  </div>
+                  <div class="col-sm-2">
+                    beta = -18.3947
+                  </div>
+                  <div class="col-sm-2">
+                    p = 0.0004
+                  </div>
+                  <div class="col-sm-2">
+                    <input type="checkbox">Show in graph</input>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="new" class="col-sm-1 control-label">x{{features.length+1}}</label>
+                  <div class="col-sm-4">
+                    <div class="input-group">
+                      <input type=text id="new" class="form-control input-sm" placeholder="Drop new regressor here..." ng-model="featureNew" ng-change="checkNew()">
+                      <div class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button>
+                        <ul class="dropdown-menu pull-right" ng-model="listNew">
+                          <li ng-repeat="newItem in listNew"><a href="" ng-click="selectNew(newItem._id)">{{newItem._id}}</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-2">
+                    <button class="btn btn-sm btn-success" ng-click="addNew()" ng-disabled="addNewDisabled()">
+                      <span class="glyphicon glyphicon-plus"></span>
+                    </button>
+                  </div>
+                </div>
+                <hr>
+                <p class="text-right">{{status}}</p>
+
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="dygraphLegend" style="position: absolute; background-color: white; opacity: 0.75; padding: 4px; border-radius: 5px;"></div>
+    </body>
+  </html>    
