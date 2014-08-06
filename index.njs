@@ -3,7 +3,7 @@ var express  = require('express');
 var app      = express();
 //var url      = require('url');
 var mongo    = require('mongojs');
-var io       = require('socket.io').listen(app);
+//var io       = require('socket.io').listen(app);
 
 // MongoDB connection details
 var dbhost = 'localhost',
@@ -11,11 +11,11 @@ var dbhost = 'localhost',
     dbname = 'tsdms';
 
 // MongoDB connection
-var db = mongo.connect("tsdms", ["timeseries", "models", "triggers"]);
+var db = mongo.connect(dbname, ["timeseries", "models", "triggers"]);
 
 // Express app
 app.use(express.errorHandler());
-app.use(express.logger('dev'));
+//app.use(express.logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded());
 app.use(express.methodOverride());
@@ -95,13 +95,13 @@ var Rprocess = spawn('c:/Program\ Files/R/R-3.0.3/bin/x64/R.exe', ['--vanilla', 
     console.log('R exec:' + buf.toString('utf8'));
   });
 
-var Rexecute = function(line){
+function Rexecute(line){
   console.log('R exec: ' + line);
   Rprocess.stdin.write(line + '\n');
 };
 
-Rexecute('source(\'C:/Users/nabi.abudaldah.GENGROUP/Documents/Node/TSDMS/R/tsdms.R\');');
-Rexecute('source(\'C:/Users/nabi.abudaldah.GENGROUP/Documents/Node/TSDMS/R/compute.R\');');
+Rexecute("source('C:/Users/nabi.abudaldah.GENGROUP/Documents/Node/TSDMS/R/tsdms.R');");
+Rexecute("source('C:/Users/nabi.abudaldah.GENGROUP/Documents/Node/TSDMS/R/compute.R');");
 
 app.get('/api/R', function(req, res){
   Rexecute('tsdms.setvector("nabi", "data", runif(96));');
@@ -117,6 +117,7 @@ app.get('/api/JS', function(req, res){
 });
 
 var topcube = require('topcube');
-topcube({ url: 'http://localhost:3000',
+topcube({ url: 'http://localhost:3000/',
           name: 'Timeseries Data Management System',
           width: 1200, height: 600, ico: 'icon.ico' });
+

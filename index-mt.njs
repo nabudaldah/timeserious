@@ -1,6 +1,5 @@
-var cluster  = require('cluster');
-var workers  = require('os').cpus().length;
-workers = 1;
+var cluster = require('cluster');
+var os = require('os');
 
 // MongoDB connection details
 var dbhost = 'localhost',
@@ -9,20 +8,28 @@ var dbhost = 'localhost',
 
 // There is one master which spawns other workers
 if (cluster.isMaster) {
-  
-  for (var i = 0; i < workers; i++) {
+
+  // we create a HTTP server, but we do not use listen
+  // that way, we have a socket.io server that doesn't accept connections
+  var server = require('http').createServer();
+  var io = require('socket.io').listen(server);
+
+  for (var i = 0; i < os.cpus().length; i++) {
     console.log('Adding worker: ' + i);
     cluster.fork();
   }
+
   cluster.on('exit', function(worker, code, signal) {
     console.log('worker ' + worker.process.pid + ' died');
-    cluster.fork();    
+    cluster.fork();
   });
-  
+
+  /*
   var topcube = require('topcube');
-  topcube({ url: 'http://localhost:3000/timeseries.html',
+  topcube({ url: 'http://localhost:3000/',
             name: 'Timeseries Data Management System',
             width: 1200, height: 600, ico: 'icon.ico' });
+  */
 }
 
 // If we are a worker, do all the work...
@@ -33,7 +40,6 @@ if (!cluster.isMaster){
   var app      = express();
   var url      = require('url');
   var mongo    = require('mongojs');
-  var io       = require('socket.io').listen(app);
   
   // MongoDB connection
   var db = mongo.connect("tsdms", ["timeseries", "models", "triggers"]);
@@ -141,3 +147,4 @@ if (!cluster.isMaster){
     JSexecute.runInNewContext('count += 1; name = "kitty"', sandbox, 'myfile.vm');
   });
 }
+
